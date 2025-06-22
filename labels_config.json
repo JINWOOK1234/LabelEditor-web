@@ -1,0 +1,61 @@
+{
+    "seller_info": [
+    "㈜태영123 서울시 송파구 양재대로932 1층",
+    "(수산물시장내) ☎ 02-404-6138"
+    ],
+  "templates": {
+    "refrigerated_base": [
+      "*보관방법: 0˚C~4˚C이하 냉장보관",
+      "*유통기한: 포장일로부터 5일이내",
+      "*반품 및 교환: 구입처 및 본사",
+      "*부정 불량식품 신고는 국번없이 1399"
+    ],
+    "frozen_base": [
+      "*보관방법: -18˚C이하 냉동보관",
+      "*유통기한: 포장일로부터 2년이내",
+      "*반품 및 교환: 구입처 및 본사",
+      "*부정 불량식품 신고는 국번없이 1399"
+    ]
+  },
+  "products": {
+    "가슴살": { "origin": "국내산", "ingredient": "닭고기", "template_type": "standard_poultry" },
+    "정육": { "origin": "국내산", "ingredient": "닭고기", "template_type": "standard_poultry" },
+    "오리슬라이스": { "origin": "국내산", "ingredient": "오리고기", "template_type": "standard_poultry" },
+    "미들윙": { "origin": "브라질", "ingredient": "닭고기", "template_type": "standard_poultry" },
+    "장각": { "origin": "브라질", "ingredient": "닭고기", "template_type": "standard_poultry" },
+    "염통": { "origin": "국내산", "ingredient": "닭고기", "template_type": "standard_poultry" },
+    "닭스킨": { "origin": "국내산", "ingredient": "닭고기", "template_type": "standard_poultry" },
+    "엉덩이살": { "origin": "브라질", "ingredient": "닭고기", "template_type": "standard_poultry" },
+    "안심": { "origin": "국내산", "ingredient": "닭고기", "template_type": "standard_poultry" },
+    "닭도리": { "origin": "국내산", "ingredient": "닭고기", "template_type": "standard_poultry" },
+    "근위": { "origin": "국내산", "ingredient": "닭고기", "template_type": "standard_poultry" },
+    "가슴살(깍뚝)": { "origin": "국내산", "ingredient": "닭고기", "template_type": "standard_poultry" },
+    "통날개": { "origin": "국내산", "ingredient": "닭고기", "template_type": "standard_poultry" },    
+    "9호 염지": {
+      "origin": "국내산",
+      "use_template": "refrigerated_base",
+      "replace_lines": { "*원료 및 함량: 닭고기 100%": "*원료 및 함량: 닭고기(국산)68.6%,\n 정제수30.49%, 식염(국산)0.91%" }
+    },
+    "민찌": {
+      "origin": "브라질",
+      "use_template": "refrigerated_base",
+      "append_lines": ["*이미 냉동된바 있으니 해동후 재냉동 시키지 마시기 바랍니다.", "*작업 후 결과물은 감량될 수 있습니다.(5%내외)"],
+      "replace_lines": { "*반품 및 교환: 구입처 및 본사": "*반품 및 교환: 구입처 및 본사" },
+      "remove_lines": ["*부정 불량식품 신고는 국번없이 1399"]
+    },
+    "번데기": { "origin": "중국산", "ingredient": "번데기","lines": ["*제조회사: HUZHOU DONGNAMFOOD CO,.LTD.","*보관방법: -18˚C이하 냉동보관","*유통기한: 소분일로부터 2년 이내","*반품 및 교환: 구입처 및 수입원","*부정 불량식품 신고는 국번없이 1399"] },
+    "참소라": { "origin": "중국산", "ingredient": "참소라","lines": ["*공장명: DONGGANG HUIYUAN CO.LTD","*보관방법: -18˚C이하 냉동보관","*유통기한: 포장일로부터 3년이내","*이미 냉동된바 있으니 해동 후 재냉동 시키지 마시기 바랍니다.","*반품 및 교환: 구입처 및 본사","*부정 불량식품 신고는 국번없이 1399"] }
+  },
+  "paper_sizes": {
+    "일반 라벨 (3x2 인치)": {
+      "width_mm": 76.2,
+      "height_mm": 50.8,
+      "type": "full_detail"
+    },
+    "소형 라벨 (3x2 cm)": {
+      "width_mm": 30,
+      "height_mm": 20,
+      "type": "simple"
+    }
+  }  
+}
