@@ -1,0 +1,32 @@
+name: Extend PythonAnywhere Web App
+
+on:
+  workflow_dispatch: # 수동으로 실행할 수 있도록 함
+  schedule:
+    # 매월 1일 0시 0분에 실행 (UTC 기준)
+    # 실제 동작은 스크립트 내의 랜덤 지연(0~60분) 후에 시작됩니다.
+    - cron: '0 0 1 * *'
+
+jobs:
+  extend:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install selenium webdriver-manager
+
+    - name: Run the extend script
+      env:
+        PA_USERNAME: ${{ secrets.PA_USERNAME }}
+        PA_PASSWORD: ${{ secrets.PA_PASSWORD }}
+      run: python -u auto_extend_app.py
