@@ -29,4 +29,4 @@ jobs:
       env:
         PA_USERNAME: ${{ secrets.PA_USERNAME }}
         PA_PASSWORD: ${{ secrets.PA_PASSWORD }}
-      run: python auto_extend_app.py
+      run: python -u auto_extend_app.py
