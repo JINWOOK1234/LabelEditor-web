@@ -35,7 +35,7 @@ try:
     # --- 랜덤 지연 추가 (0~30분) ---
     delay_seconds = random.randint(0, 1800)
     print(f"스크립트 실행을 {delay_seconds // 60}분 {delay_seconds % 60}초 지연합니다...")
-   # time.sleep(delay_seconds)
+    time.sleep(delay_seconds)
 
     # 1. 로그인 페이지 접속
     print("1. PythonAnywhere 로그인 페이지에 접속합니다.")
