@@ -35,7 +35,7 @@ try:
     # --- 랜덤 지연 추가 (0~30분) ---
     delay_seconds = random.randint(0, 1800)
     print(f"스크립트 실행을 {delay_seconds // 60}분 {delay_seconds % 60}초 지연합니다...")
-    #time.sleep(delay_seconds)
+   # time.sleep(delay_seconds)
 
     # 1. 로그인 페이지 접속
     print("1. PythonAnywhere 로그인 페이지에 접속합니다.")
@@ -54,7 +54,6 @@ try:
     # 2. 아이디와 비밀번호 입력
     username_field = wait.until(EC.visibility_of_element_located((By.ID, 'id_auth-username')))
     password_field = wait.until(EC.visibility_of_element_located((By.ID, 'id_auth-password')))
-    # [수정] 로그인 버튼의 ID를 'id_next'로 변경합니다.
     login_button = wait.until(EC.element_to_be_clickable((By.ID, 'id_next')))
 
     driver.execute_script("arguments[0].value = arguments[1];", username_field, PA_USERNAME)
@@ -63,6 +62,15 @@ try:
     driver.execute_script("arguments[0].click();", login_button)
     print("2. 로그인 정보를 입력하고 제출했습니다.")
     
+    # [수정] 디버깅을 위한 코드 추가
+    time.sleep(5) # 페이지가 바뀌기를 5초간 기다립니다.
+    print("\n--- 로그인 후 페이지 정보 ---")
+    print(f"URL: {driver.current_url}")
+    print(f"페이지 제목: {driver.title}")
+    # 페이지 소스를 출력하여 로그인 실패 메시지나 Captcha가 있는지 확인합니다.
+    # print(f"페이지 소스: {driver.page_source}") 
+    print("---------------------------\n")
+
     # 3. Web 탭으로 이동
     webapps_url = f'https://www.pythonanywhere.com/user/{PA_USERNAME}/webapps/'
     wait.until(EC.url_contains('dashboard'))
