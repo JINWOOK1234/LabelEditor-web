@@ -73,7 +73,7 @@ try:
 
     # 3. Web 탭으로 이동
     webapps_url = f'https://www.pythonanywhere.com/user/{PA_USERNAME}/webapps/'
-    wait.until(EC.url_contains('dashboard'))
+    wait.until(EC.title_contains('Dashboard'))
     print("3. Web 탭 페이지로 이동합니다.")
     driver.get(webapps_url)
 
