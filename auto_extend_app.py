@@ -21,6 +21,9 @@ options = webdriver.ChromeOptions()
 options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
+# [수정] 안정성 향상을 위한 옵션 추가
+options.add_argument('--disable-gpu')
+options.add_argument('--window-size=1920x1080')
 options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
 
 service = ChromeService(ChromeDriverManager().install())
@@ -33,13 +36,16 @@ try:
     # --- 랜덤 지연 추가 (0~30분) ---
     delay_seconds = random.randint(0, 1800)
     print(f"스크립트 실행을 {delay_seconds // 60}분 {delay_seconds % 60}초 지연합니다...")
-   # time.sleep(delay_seconds)
+  #  time.sleep(delay_seconds)
 
     # 1. 로그인 페이지 접속
     print("1. PythonAnywhere 로그인 페이지에 접속합니다.")
     driver.get('https://www.pythonanywhere.com/login/')
+    
+    # [수정] 디버깅을 위해 페이지 타이틀 출력
+    print(f"   - 현재 페이지 제목: {driver.title}")
 
-    # [수정] 쿠키 동의 버튼이 있으면 클릭
+    # 쿠키 동의 버튼이 있으면 클릭
     try:
         cookie_button = wait.until(EC.element_to_be_clickable((By.ID, "id_cookieconsent_agree_button")))
         cookie_button.click()
@@ -49,14 +55,12 @@ try:
         print("   - 쿠키 동의 버튼이 없습니다. 계속 진행합니다.")
 
     # 2. 아이디와 비밀번호 입력
-    # [수정] WebDriverWait를 사용하여 요소가 나타날 때까지 기다립니다.
     wait.until(EC.presence_of_element_located((By.ID, 'id_auth-username'))).send_keys(PA_USERNAME)
     wait.until(EC.presence_of_element_located((By.ID, 'id_auth-password'))).send_keys(PA_PASSWORD)
     wait.until(EC.element_to_be_clickable((By.ID, 'id_loginbutton'))).click()
     print("2. 로그인 정보를 입력하고 제출했습니다.")
     
     # 3. Web 탭으로 이동
-    # 로그인이 성공하면 Dashboard로 이동하므로, Web 탭의 URL로 직접 이동합니다.
     webapps_url = f'https://www.pythonanywhere.com/user/{PA_USERNAME}/webapps/'
     wait.until(EC.url_contains('dashboard')) # 대시보드 로딩 확인
     print("3. Web 탭 페이지로 이동합니다.")
