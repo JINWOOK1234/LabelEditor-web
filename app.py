@@ -180,17 +180,23 @@ def generate_pdf():
     
     seller_info = config_data.get("seller_info", "")
     
+      # --- ★★★ 주요 변경점: 인쇄 보정값(음수 여백) 적용 ★★★ ---
+    x_offset = -2.8  # 약 1mm를 왼쪽으로 이동 (필요시 이 값을 미세 조정)
+    y_offset = 0
+
+
     for i, data in enumerate(queue):
         if paper_info['type'] == 'simple':
-            draw_simple_label(c, data, 0, 0, label_width, label_height)
+            draw_simple_label(c, data, x_offset, y_offset, label_width, label_height)
         else:
-            draw_full_detail_label(c, data, 0, 0, label_width, label_height, seller_info)
+            draw_full_detail_label(c, data, x_offset, y_offset, label_width, label_height, seller_info)
         if i < len(queue) - 1:
             c.showPage()
     c.save()
     pdf_buffer.seek(0)
     
     return send_file(pdf_buffer, mimetype='application/pdf')
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
