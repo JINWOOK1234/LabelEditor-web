@@ -35,7 +35,7 @@ try:
     # --- 랜덤 지연 추가 (0~30분) ---
     delay_seconds = random.randint(0, 1800)
     print(f"스크립트 실행을 {delay_seconds // 60}분 {delay_seconds % 60}초 지연합니다...")
-    #time.sleep(delay_seconds)
+    time.sleep(delay_seconds)
 
     # 1. 로그인 페이지 접속
     print("1. PythonAnywhere 로그인 페이지에 접속합니다.")
@@ -52,14 +52,14 @@ try:
         print("   - 쿠키 동의 버튼이 없습니다. 계속 진행합니다.")
 
     # 2. 아이디와 비밀번호 입력
-    # [수정] JavaScript를 사용하여 값을 직접 설정하는 방식으로 안정성 강화
     username_field = wait.until(EC.visibility_of_element_located((By.ID, 'id_auth-username')))
     password_field = wait.until(EC.visibility_of_element_located((By.ID, 'id_auth-password')))
-    login_button = wait.until(EC.element_to_be_clickable((By.ID, 'id_loginbutton')))
+    # [수정] 로그인 버튼의 ID를 'id_next'로 변경합니다.
+    login_button = wait.until(EC.element_to_be_clickable((By.ID, 'id_next')))
 
     driver.execute_script("arguments[0].value = arguments[1];", username_field, PA_USERNAME)
     driver.execute_script("arguments[0].value = arguments[1];", password_field, PA_PASSWORD)
-    time.sleep(1) # 값 입력 후 잠시 대기
+    time.sleep(1) 
     driver.execute_script("arguments[0].click();", login_button)
     print("2. 로그인 정보를 입력하고 제출했습니다.")
     
