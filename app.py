@@ -50,6 +50,7 @@ def draw_full_detail_label(c, data, x, y, width, height, seller_info):
     
     c.setFont('Malgun-Bold', 8)
     c.drawString(x + 10, y + height - 45, f"가공(포장)일: {data.get('date', '')}")
+    c.setFont('Malgun-Bold', 11)
     c.drawRightString(right_margin, y + height - 45, f"중량(Kg): {data.get('weight', 0.0)} ±20g")
 
     details_text = data.get('details', '')
