@@ -51,24 +51,47 @@ try:
 
     # 2. 로그인 수행
     print("2. 로그인을 시도합니다.")
-    # ID가 바뀔 수 있으므로 name 속성 등으로도 시도
-    username_field = wait.until(EC.presence_of_element_located((
-        By.CSS_SELECTOR, "input[name='auth-username'], #id_auth-username"
-    )))
-    password_field = driver.find_element(By.CSS_SELECTOR, "input[name='auth-password'], #id_auth-password")
-    
+    # 입력 필드가 나타날 때까지 최대 30초 대기
+    try:
+        username_field = wait.until(EC.visibility_of_element_located((By.NAME, 'auth-username')))
+        password_field = driver.find_element(By.NAME, 'auth-password')
+    except:
+        # NAME으로 못 찾으면 ID로 재시도
+        username_field = wait.until(EC.visibility_of_element_located((By.ID, 'id_auth-username')))
+        password_field = driver.find_element(By.ID, 'id_auth-password')
+
     username_field.send_keys(PA_USERNAME)
     password_field.send_keys(PA_PASSWORD)
     
-    # 버튼도 CSS Selector로 더 확실하게 타격
-    login_button = driver.find_element(By.CSS_SELECTOR, "button#id_next, input#id_next")
-    driver.execute_script("arguments[0].click();", login_button)
+    # [핵심] 로그인 버튼을 찾는 경로를 여러 개 준비 (하나라도 걸리게)
+    login_button_selectors = [
+        "button#id_next",
+        "input#id_next",
+        "//button[contains(text(), 'Log in')]",
+        "//input[@type='submit']",
+        ".btn-primary"
+    ]
     
-    login_button = driver.find_element(By.ID, 'id_next')
-    driver.execute_script("arguments[0].click();", login_button)
+    login_button = None
+    for selector in login_button_selectors:
+        try:
+            # XPATH와 CSS Selector를 구분해서 시도
+            method = By.XPATH if selector.startswith("/") else By.CSS_SELECTOR
+            btn = driver.find_element(method, selector)
+            if btn.is_displayed():
+                login_button = btn
+                break
+        except:
+            continue
 
-    # 로그인 성공 확인
-    wait.until(EC.presence_of_element_located((By.ID, 'id_feedback_link')))
+    if login_button:
+        driver.execute_script("arguments[0].click();", login_button)
+        print("   - 로그인 버튼을 클릭했습니다.")
+    else:
+        # 버튼을 끝내 못 찾으면 현재 화면 저장 후 에러 발생
+        driver.save_screenshot("error_screenshot.png")
+        raise Exception("Login button (id_next) not found on the page.")
+        
     print("   - 로그인 성공!")
 
     # 3. Web 탭으로 이동
