@@ -32,7 +32,7 @@ print(">>> 자동 연장 스크립트를 시작합니다.")
 
 try:
     # 봇 탐지 방지를 위한 랜덤 지연 (0~20분)
-    delay = random.randint(0, 0)
+    delay = random.randint(0, 1200)
     print(f"안전한 접속을 위해 {delay // 60}분 {delay % 60}초 대기합니다...")
     time.sleep(delay)
 
