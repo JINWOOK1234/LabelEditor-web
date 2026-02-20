@@ -1,10 +1,9 @@
 name: Extend PythonAnywhere Web App
 
 on:
-  workflow_dispatch: # 수동으로 실행할 수 있도록 함
+  workflow_dispatch:
   schedule:
-    # 매월 1일 0시 0분에 실행 (UTC 기준)
-    # 실제 동작은 스크립트 내의 랜덤 지연(0~60분) 후에 시작됩니다.
+    # 매주 월요일 0시 0분에 실행 (UTC 기준)
     - cron: '0 0 * * 1'
 
 jobs:
@@ -31,8 +30,8 @@ jobs:
         PA_PASSWORD: ${{ secrets.PA_PASSWORD }}
       run: python -u auto_extend_app.py
 
-     - name: Upload Screenshot on Failure
-      if: failure()  # 스크립트가 실패했을 때만 실행
+    - name: Upload Screenshot on Failure
+      if: failure()  # 앞선 단계가 실패했을 때만 실행됨
       uses: actions/upload-artifact@v4
       with:
         name: error-screenshot
