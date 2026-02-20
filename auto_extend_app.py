@@ -112,7 +112,10 @@ try:
         "//input[contains(@value, 'Run until')]", # 기존 형태
         "//button[contains(text(), 'Run until')]" # 텍스트 형태
     ]
-    
+    # [핵심] 버튼이 있는 곳으로 스크롤을 내립니다.
+    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", extend_button)
+    time.sleep(2)  # 스크롤 후 안정화를 위해 잠시 대기
+
     found_button = None
     for selector in extend_selectors:
         try:
