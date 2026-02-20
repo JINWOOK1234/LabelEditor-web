@@ -103,39 +103,33 @@ try:
     wait.until(EC.presence_of_element_located((By.ID, 'id_web_app_setup_section')))
     print(f"   - Web 탭 로딩 완료: {driver.current_url}")
 
-    # 4. 연장 버튼 클릭 (핵심 수정 부분)
+  # 4. 연장 버튼 클릭 (스크롤 및 대기 로직 강화)
     print("4. 연장 버튼(Run until...)을 찾는 중...")
     
-    # 버튼을 찾는 여러가지 경로를 시도합니다.
-    extend_selectors = [
-        "//form[@method='POST' and contains(@action, 'extend')]//button", # 최근 변경된 버튼 형태
-        "//input[contains(@value, 'Run until')]", # 기존 형태
-        "//button[contains(text(), 'Run until')]" # 텍스트 형태
-    ]
-    # [핵심] 버튼이 있는 곳으로 스크롤을 내립니다.
-    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", extend_button)
-    time.sleep(2)  # 스크롤 후 안정화를 위해 잠시 대기
-
-    found_button = None
-    for selector in extend_selectors:
-        try:
-            btn = driver.find_element(By.XPATH, selector)
-            if btn.is_displayed():
-                found_button = btn
-                break
-        except:
-            continue
-
-    if found_button:
-        driver.execute_script("arguments[0].click();", found_button)
+    try:
+        # 버튼이 로딩될 때까지 충분히 기다립니다 (최대 30초)
+        extend_button = wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//input[contains(@value, 'Run until')] | //button[contains(text(), 'Run until')]")
+        ))
+        
+        # [핵심] 버튼이 있는 곳으로 스크롤을 내립니다.
+        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", extend_button)
+        time.sleep(2)  # 스크롤 후 안정화를 위해 잠시 대기
+        
+        # JavaScript를 사용하여 직접 클릭 (화면에 가려져 있어도 클릭 가능)
+        driver.execute_script("arguments[0].click();", extend_button)
+        
         print(">>> 성공: 웹 앱 기간을 성공적으로 연장했습니다!")
-        time.sleep(2) # 반영 확인 대기
-    else:
-        # 버튼을 못 찾으면 스크린샷을 찍고 에러를 발생시킵니다.
+        
+        # 성공 후 결과 확인을 위해 3초 대기 후 스크린샷 한 번 더 찍기 (선택 사항)
+        time.sleep(3)
+        driver.save_screenshot("success_check.png")
+        
+    except Exception as e:
         driver.save_screenshot("error_screenshot.png")
-        print("!!! 실패: 연장 버튼을 찾을 수 없습니다. (스크린샷 저장됨)")
-        raise Exception("Extend button not found")
-
+        print(f"!!! 실패: 연장 버튼을 클릭하지 못했습니다. 오류: {e}")
+        raise e
+        
 except Exception as e:
     print(f"\n[오류 발생] 스크립트가 중단되었습니다: {e}")
     driver.save_screenshot("error_screenshot.png")
