@@ -76,6 +76,10 @@ try:
     webapps_url = f'https://www.pythonanywhere.com/user/{PA_USERNAME}/webapps/'
     driver.get(webapps_url)
 
+    # 페이지가 완전히 로딩될 때까지 기다립니다 (Web 탭 전용 요소 확인)
+    wait.until(EC.presence_of_element_located((By.ID, 'id_web_app_setup_section')))
+    print(f"   - Web 탭 로딩 완료: {driver.current_url}")
+
     # 4. 연장 버튼 클릭 (핵심 수정 부분)
     print("4. 연장 버튼(Run until...)을 찾는 중...")
     
