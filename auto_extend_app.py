@@ -29,6 +29,12 @@ service = ChromeService(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=options)
 wait = WebDriverWait(driver, 30) # 대기 시간을 30초로 늘림
 
+# --- 랜덤 지연 부분 수정 ---
+# 테스트할 때는 아래 3줄을 주석 처리(#) 하거나, 0으로 만드세요.
+# delay_seconds = random.randint(0, 1800)
+# print(f"스크립트 실행을 {delay_seconds // 60}분 {delay_seconds % 60}초 지연합니다...")
+# time.sleep(delay_seconds)
+
 print(">>> 자동 연장 스크립트를 시작합니다.")
 
 try:
@@ -45,11 +51,18 @@ try:
 
     # 2. 로그인 수행
     print("2. 로그인을 시도합니다.")
-    username_field = wait.until(EC.presence_of_element_located((By.ID, 'id_auth-username')))
-    password_field = driver.find_element(By.ID, 'id_auth-password')
+    # ID가 바뀔 수 있으므로 name 속성 등으로도 시도
+    username_field = wait.until(EC.presence_of_element_located((
+        By.CSS_SELECTOR, "input[name='auth-username'], #id_auth-username"
+    )))
+    password_field = driver.find_element(By.CSS_SELECTOR, "input[name='auth-password'], #id_auth-password")
     
     username_field.send_keys(PA_USERNAME)
     password_field.send_keys(PA_PASSWORD)
+    
+    # 버튼도 CSS Selector로 더 확실하게 타격
+    login_button = driver.find_element(By.CSS_SELECTOR, "button#id_next, input#id_next")
+    driver.execute_script("arguments[0].click();", login_button)
     
     login_button = driver.find_element(By.ID, 'id_next')
     driver.execute_script("arguments[0].click();", login_button)
