@@ -93,34 +93,30 @@ try:
         raise Exception("Login button (id_next) not found on the page.")
         
     print("   - 로그인 성공!")
-
-    # 3. Web 탭으로 이동 (안전성 강화 버전)
+    # 3. Web 탭으로 이동 (범용성 강화 버전)
     print("3. Web 탭 페이지로 이동을 시도합니다.")
     
-    # [추가] 로그인이 완전히 처리되어 대시보드 UI가 보일 때까지 대기
-    try:
-        # 로그아웃 링크나 사용자 이름이 보이면 로그인이 완료된 것
-        wait.until(EC.presence_of_element_located((By.LINK_TEXT, "Log out")))
-        print("   - 로그인 세션 확인 완료.")
-    except:
-        print("   - 세션 확인 지연 중... 일단 이동을 시도합니다.")
-
     webapps_url = f'https://www.pythonanywhere.com/user/{PA_USERNAME}/webapps/'
     
-    # URL 이동 후 페이지가 완전히 로딩될 때까지 최대 3번 재시도
     for attempt in range(3):
         try:
             driver.get(webapps_url)
-            # Web 탭의 고유한 요소(Web apps 리스트 섹션)가 나타나는지 확인
-            wait.until(EC.presence_of_element_located((By.ID, 'id_web_app_setup_section')))
+            
+            # 특정 ID 대신, URL이 맞게 이동했는지와 페이지 제목(Title)을 확인
+            # Web 탭은 보통 제목에 'Web app setup'이나 사용자의 ID가 포함됩니다.
+            wait.until(lambda d: PA_USERNAME in d.current_url and "PythonAnywhere" in d.title)
+            
+            # 페이지 내부에 'Configuration' 혹은 'Reload' 라는 글자가 보이면 로딩 완료로 간주
+            wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Configuration') or contains(text(), 'Reload')]")))
+            
             print(f"   - {attempt+1}차 시도: Web 탭 로딩 성공!")
             break
         except Exception as e:
-            print(f"   - {attempt+1}차 시도 실패, 재시도 중...")
+            print(f"   - {attempt+1}차 시도 실패: {e}")
+            driver.save_screenshot(f"debug_move_attempt_{attempt+1}.png") # 매 시도마다 사진 찍기
             time.sleep(3)
             if attempt == 2:
-                driver.save_screenshot("web_tab_move_error.png")
-                raise Exception("Web 탭으로 이동하지 못했습니다.")
+                raise Exception("Web 탭 로딩 확인 실패 (ID 변경 의심)")
 
     # 4. 연장 버튼 클릭 (이전의 '싹 다 눌러' 버전 유지)
     # ... (이후 코드는 동일)
