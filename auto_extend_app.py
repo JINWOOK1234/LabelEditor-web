@@ -103,31 +103,35 @@ try:
     wait.until(EC.presence_of_element_located((By.ID, 'id_web_app_setup_section')))
     print(f"   - Web 탭 로딩 완료: {driver.current_url}")
 
-  # 4. 연장 버튼 클릭 (스크롤 및 대기 로직 강화)
+    # 4. 연장 버튼 클릭 (가장 강력한 버전)
     print("4. 연장 버튼(Run until...)을 찾는 중...")
     
+    # 페이지가 완전히 안정화될 때까지 잠시 대기
+    time.sleep(5) 
+
     try:
-        # 버튼이 로딩될 때까지 충분히 기다립니다 (최대 30초)
+        # 1. 버튼이 나타날 때까지 기다림 (By.NAME이 더 정확할 수 있음)
         extend_button = wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//input[contains(@value, 'Run until')] | //button[contains(text(), 'Run until')]")
+            (By.XPATH, "//input[contains(@value, 'Run until')]")
         ))
         
-        # [핵심] 버튼이 있는 곳으로 스크롤을 내립니다.
-        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", extend_button)
-        time.sleep(2)  # 스크롤 후 안정화를 위해 잠시 대기
+        # 2. 스크롤을 아주 아래까지 충분히 내림 (전체 페이지 높이만큼)
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(2)
         
-        # JavaScript를 사용하여 직접 클릭 (화면에 가려져 있어도 클릭 가능)
+        # 3. 버튼이 화면에 보이지 않아도 '강제로' 클릭 명령 전달 (JavaScript 방식)
+        # 이 방식은 물리적 클릭이 아니라 브라우저 엔진에 직접 "이 버튼 눌러!"라고 명령하는 거라 가장 확실합니다.
         driver.execute_script("arguments[0].click();", extend_button)
         
         print(">>> 성공: 웹 앱 기간을 성공적으로 연장했습니다!")
         
-        # 성공 후 결과 확인을 위해 3초 대기 후 스크린샷 한 번 더 찍기 (선택 사항)
+        # 성공 후 화면 확인을 위해 3초 대기 후 스크린샷
         time.sleep(3)
-        driver.save_screenshot("success_check.png")
-        
+        driver.save_screenshot("after_click_success.png")
+
     except Exception as e:
-        driver.save_screenshot("error_screenshot.png")
-        print(f"!!! 실패: 연장 버튼을 클릭하지 못했습니다. 오류: {e}")
+        driver.save_screenshot("last_error_screenshot.png")
+        print(f"!!! 실패: 버튼을 찾았으나 클릭에 실패했습니다. 오류: {e}")
         raise e
         
 except Exception as e:
