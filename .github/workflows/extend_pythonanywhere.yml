@@ -31,7 +31,7 @@ jobs:
         PA_PASSWORD: ${{ secrets.PA_PASSWORD }}
       run: python -u auto_extend_app.py
 
-      - name: Upload Screenshot on Failure
+     - name: Upload Screenshot on Failure
       if: failure()  # 스크립트가 실패했을 때만 실행
       uses: actions/upload-artifact@v4
       with:
