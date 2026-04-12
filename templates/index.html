@@ -32,6 +32,16 @@
         .input-group { display: flex; gap: 5px; align-items: center; }
         .input-group input, .input-group .date-display { flex-grow: 1; width: auto; }
         .input-group button { width: auto; padding: 10px; }
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            margin-bottom: 15px;
+        }
+        .input-row .control-group {
+            flex: 1;
+            margin-bottom: 0; /* 줄 간격 중복 방지 */
+        }
 
         #queue-list { list-style-type: none; padding: 0; min-height: 150px; max-height: 250px; overflow-y: auto; border: 1px solid #ccc; border-radius: 5px; margin-top: 10px; }
         #queue-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 0.9em;}
@@ -59,6 +69,7 @@
                     <input type="text" id="custom-product-name" placeholder="제품명 직접 입력" style="width: 10%;">
                     <button id="set-custom-product">설정</button>
                 </div>
+                <div id="history-list" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;"></div>
             </div>
             <div class="control-group">
                 <label>라벨 종류</label>
@@ -68,10 +79,17 @@
                 <label>원산지</label>
                 <div id="origin-radios" class="radio-group"></div>
             </div>
-            <div class="control-group">
-                <label for="ingredient">원료</label>
-                <input type="text" id="ingredient-input" value="닭고기">
+            <div class="input-row">
+                <div class="control-group" style="flex: 1.5;">
+                    <label for="ingredient">원료</label>
+                    <input type="text" id="ingredient-input" value="닭고기">
+                </div>
+                <div class="control-group" style="flex: 1;">
+                    <label for="history-input">이력번호</label>
+                    <input type="text" id="history-input" placeholder="이력번호 입력">
+                </div>
             </div>
+
             <div class="control-group">
                 <label>보관방법</label>
                 <div class="radio-group">
@@ -88,6 +106,7 @@
                     <span id="date-display" class="date-display" style="text-align: center; padding: 12px; border: 1px solid #ccc; border-radius: 5px;"></span>
                     <button id="date-up">+1일</button>
                 </div>
+                
             </div>
             <div class="control-group">
                 <label for="weight">중량(Kg)</label>
@@ -126,8 +145,62 @@
             createPaperSizeRadios();
             updateDateDisplay();
             setupEventListeners();
+            renderHistory();
         });
 
+
+            // 1. 브라우저 저장소에서 데이터 불러오기
+        let manualHistory = JSON.parse(localStorage.getItem('label_manual_history') || '[]');
+
+        // 2. 히스토리 버튼을 화면에 그리는 함수
+       function renderHistory() {
+            const container = document.getElementById('history-list');
+            if (!container) return; // 에러 방지
+            container.innerHTML = '';
+            
+            manualHistory.forEach(item => {
+                const btn = document.createElement('span');
+                btn.style.cssText = "padding: 5px 12px; font-size: 0.85em; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 15px; cursor: pointer; font-weight: bold; color: #495057; margin-right: 5px; margin-bottom: 5px; display: inline-block;";
+                btn.textContent = item.name;
+                
+                btn.onclick = () => {
+                    // 1. 제품명 입력창 채우기
+                    document.getElementById('custom-product-name').value = item.name;
+                    document.getElementById('ingredient-input').value = item.ingredient || '';
+                    document.getElementById('weight').value = item.weight || "0.0"; // 중량 복구
+
+                    // 2. 원산지 라디오 버튼 선택 (name="origin" 기준)
+                    const originRadio = document.querySelector(`input[name="origin"][value="${item.origin}"]`);
+                    if (originRadio) originRadio.checked = true;
+                    
+                    // 3. 보관방법 라디오 버튼 선택 (사용자님 소스의 ID 기준)
+                    const storageId = (item.storage === '냉장') ? 'storage-refrigerated' : 'storage-frozen';
+                    const storageRadio = document.getElementById(storageId);
+                    if (storageRadio) storageRadio.checked = true;
+                    
+                    // 4. 원료 입력창 채우기
+                    document.getElementById('ingredient-input').value = item.ingredient || '';
+                    
+                    // 5. 핵심: 전역 변수 업데이트 및 미리보기 갱신
+                    selectedProduct = item.name; 
+                    updatePreview(); 
+                    
+                    // 기존 선택된 제품 버튼들의 강조(active) 효과 제거
+                    document.querySelectorAll('.product-button.active').forEach(b => b.classList.remove('active'));
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // 3. 새로운 입력을 히스토리에 저장하는 함수
+        function saveHistory(item) {
+            manualHistory = manualHistory.filter(h => h.name !== item.name); // 중복 제거
+            manualHistory.unshift(item); // 맨 앞에 추가
+            if (manualHistory.length > 8) manualHistory.pop(); // 5개 제한
+            localStorage.setItem('label_manual_history', JSON.stringify(manualHistory));
+            renderHistory();
+        }
+            
         // --- UI 생성 ---
         function createOriginRadios() {
             const originContainer = document.getElementById('origin-radios');
@@ -160,6 +233,7 @@
             document.getElementById('set-custom-product').addEventListener('click', handleCustomProduct);
             document.querySelectorAll('input[name="origin"], input[name="storage"], input[name="paper_size"]').forEach(r => r.addEventListener('change', updatePreview));
             document.getElementById('ingredient-input').addEventListener('input', updatePreview);
+            document.getElementById('history-input').addEventListener('input', updatePreview);
             document.getElementById('date-down').addEventListener('click', () => adjustDate(-1));
             document.getElementById('date-up').addEventListener('click', () => adjustDate(1));
             document.getElementById('weight').addEventListener('input', updatePreview);
@@ -196,6 +270,17 @@
             if (!customName) { alert('제품 이름을 입력해주세요.'); return; }
             document.querySelectorAll('.product-button.active').forEach(b => b.classList.remove('active'));
             selectedProduct = customName;
+
+                // 히스토리 저장 데이터 구성
+            const historyItem = {
+                name: customName,
+                origin: document.querySelector('input[name="origin"]:checked').value,
+                storage: document.querySelector('input[name="storage"]:checked').value,
+                ingredient: document.getElementById('ingredient-input').value,
+                weight: document.getElementById('weight').value // 현재 중량 저장
+            };
+            
+            saveHistory(historyItem);
             updatePreview();
         }
 
@@ -206,6 +291,7 @@
                 origin: document.querySelector('input[name="origin"]:checked').value,
                 date: document.getElementById('date-display').textContent,
                 weight: document.getElementById('weight').value,
+                history: document.getElementById('history-input').value, // [추가]
                 details: generateDetailsTextJS(
                     selectedProduct,
                     document.querySelector('input[name="storage"]:checked').value,
@@ -371,6 +457,7 @@
                     origin: document.querySelector('input[name="origin"]:checked').value,
                     date: document.getElementById('date-display').textContent,
                     weight: document.getElementById('weight').value,
+                    history: document.getElementById('history-input').value, // [추가]
                     details: generateDetailsTextJS(
                         productName, 
                         document.querySelector('input[name="storage"]:checked').value,
