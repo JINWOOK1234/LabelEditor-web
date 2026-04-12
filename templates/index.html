@@ -192,6 +192,19 @@
             });
         }
 
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    func.apply(this, args);
+                }, wait);
+            };
+        }
+
+        // [추가] updatePreview를 0.5초(500ms) 딜레이가 있는 버전으로 만들기
+        const debouncedUpdatePreview = debounce(updatePreview, 500);
+
         // 3. 새로운 입력을 히스토리에 저장하는 함수
         function saveHistory(item) {
             manualHistory = manualHistory.filter(h => h.name !== item.name); // 중복 제거
@@ -232,8 +245,8 @@
             document.querySelectorAll('.product-button').forEach(b => b.addEventListener('click', () => handleProductSelect(b)));
             document.getElementById('set-custom-product').addEventListener('click', handleCustomProduct);
             document.querySelectorAll('input[name="origin"], input[name="storage"], input[name="paper_size"]').forEach(r => r.addEventListener('change', updatePreview));
-            document.getElementById('ingredient-input').addEventListener('input', updatePreview);
-            document.getElementById('history-input').addEventListener('input', updatePreview);
+            document.getElementById('ingredient-input').addEventListener('input', debouncedUpdatePreview);
+            document.getElementById('history-input').addEventListener('input', debouncedUpdatePreview);
             document.getElementById('date-down').addEventListener('click', () => adjustDate(-1));
             document.getElementById('date-up').addEventListener('click', () => adjustDate(1));
             document.getElementById('weight').addEventListener('input', updatePreview);
