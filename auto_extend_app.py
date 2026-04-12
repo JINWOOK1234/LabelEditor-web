@@ -8,90 +8,87 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-# --- 사용자 정보 설정 ---
+# --- 1. 사용자 정보 로드 ---
 PA_USERNAME = os.environ.get('PA_USERNAME')
 PA_PASSWORD = os.environ.get('PA_PASSWORD')
 
 if not PA_USERNAME or not PA_PASSWORD:
-    print("오류: PA_USERNAME 또는 PA_PASSWORD 환경 변수가 설정되지 않았습니다.")
-    exit()
+    print("오류: GitHub Secrets에 PA_USERNAME 또는 PA_PASSWORD가 설정되지 않았습니다.")
+    exit(1)
 
-# --- Selenium 웹 드라이버 설정 ---
+# --- 2. 브라우저 설정 ---
 options = webdriver.ChromeOptions()
 options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
-options.add_argument('--disable-gpu')
-options.add_argument('--window-size=1920x1080')
-options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+options.add_argument('--window-size=1920,1080')
+options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
 service = ChromeService(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=options)
-wait = WebDriverWait(driver, 20)
+wait = WebDriverWait(driver, 30)
 
 print(">>> 자동 연장 스크립트를 시작합니다.")
 
 try:
-    # --- 랜덤 지연 추가 (0~30분) ---
-    delay_seconds = random.randint(0, 1800)
-    print(f"스크립트 실행을 {delay_seconds // 60}분 {delay_seconds % 60}초 지연합니다...")
-    time.sleep(delay_seconds)
+    # 봇 탐지 방지를 위한 랜덤 지연 (0~20분)
+    delay = random.randint(0, 1200)
+    print(f"안전한 접속을 위해 {delay // 60}분 {delay % 60}초 대기합니다...")
+    time.sleep(delay)
 
-    # 1. 로그인 페이지 접속
-    print("1. PythonAnywhere 로그인 페이지에 접속합니다.")
+    # 1) 로그인 페이지 접속
+    print("1. 로그인 페이지 접속")
     driver.get('https://www.pythonanywhere.com/login/')
-    print(f"   - 현재 페이지 제목: {driver.title}")
 
-    # 쿠키 동의 버튼이 있으면 클릭
-    try:
-        cookie_button = wait.until(EC.element_to_be_clickable((By.ID, "id_cookieconsent_agree_button")))
-        cookie_button.click()
-        print("   - 쿠키 동의 버튼을 클릭했습니다.")
-        time.sleep(1)
-    except Exception:
-        print("   - 쿠키 동의 버튼이 없습니다. 계속 진행합니다.")
-
-    # 2. 아이디와 비밀번호 입력
-    username_field = wait.until(EC.visibility_of_element_located((By.ID, 'id_auth-username')))
-    password_field = wait.until(EC.visibility_of_element_located((By.ID, 'id_auth-password')))
-    login_button = wait.until(EC.element_to_be_clickable((By.ID, 'id_next')))
-
-    driver.execute_script("arguments[0].value = arguments[1];", username_field, PA_USERNAME)
-    driver.execute_script("arguments[0].value = arguments[1];", password_field, PA_PASSWORD)
-    time.sleep(1) 
-    driver.execute_script("arguments[0].click();", login_button)
-    print("2. 로그인 정보를 입력하고 제출했습니다.")
+    # 2) 로그인 정보 입력 및 제출
+    print("2. 로그인 시도")
+    user_field = wait.until(EC.visibility_of_element_located((By.ID, 'id_auth-username')))
+    pass_field = driver.find_element(By.ID, 'id_auth-password')
     
-    # [수정] 디버깅을 위한 코드 추가
-    time.sleep(5) # 페이지가 바뀌기를 5초간 기다립니다.
-    print("\n--- 로그인 후 페이지 정보 ---")
-    print(f"URL: {driver.current_url}")
-    print(f"페이지 제목: {driver.title}")
-    # 페이지 소스를 출력하여 로그인 실패 메시지나 Captcha가 있는지 확인합니다.
-    # print(f"페이지 소스: {driver.page_source}") 
-    print("---------------------------\n")
+    user_field.send_keys(PA_USERNAME)
+    pass_field.send_keys(PA_PASSWORD)
+    
+    login_btn = wait.until(EC.element_to_be_clickable((By.ID, 'id_next')))
+    driver.execute_script("arguments[0].click();", login_btn)
 
-    # 3. Web 탭으로 이동
+    # 3) Web 탭으로 이동 (세션 확인 포함)
+    print("3. Web 탭으로 이동")
+    time.sleep(5) # 로그인 처리 대기
     webapps_url = f'https://www.pythonanywhere.com/user/{PA_USERNAME}/webapps/'
-    wait.until(EC.title_contains('Dashboard'))
-    print("3. Web 탭 페이지로 이동합니다.")
     driver.get(webapps_url)
+    
+    # 페이지 제목과 로딩 확인
+    wait.until(lambda d: PA_USERNAME in d.current_url and "PythonAnywhere" in d.title)
+    print("   - Web 탭 로딩 완료")
 
-    # 4. 연장 버튼 클릭
-    try:
-        print("4. 연장 버튼을 찾습니다...")
-        extend_button = wait.until(
-            EC.element_to_be_clickable((By.XPATH, "//input[contains(@value, 'Run until')]"))
-        )
-        extend_button.click()
-        print(">>> 성공: 웹 앱 기간을 성공적으로 연장했습니다!")
-    except Exception:
-        print("--- 정보: 연장 버튼을 찾을 수 없습니다. 이미 연장되었거나, 만료일이 많이 남았을 수 있습니다.")
+    # 4) 연장 버튼 탐색 및 강제 클릭
+    print("4. 연장 버튼 탐색 및 클릭")
+    time.sleep(3)
+    # 바닥까지 스크롤
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    
+    # 'Run until' 텍스트를 포함한 모든 요소 찾기
+    buttons = driver.find_elements(By.XPATH, "//*[contains(text(), 'Run until') or contains(@value, 'Run until')]")
+    
+    if not buttons:
+        raise Exception("연장 버튼을 찾을 수 없습니다.")
+
+    for i, btn in enumerate(buttons):
+        try:
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn)
+            time.sleep(1)
+            driver.execute_script("arguments[0].click();", btn)
+            print(f"   - {i+1}번 후보 클릭 성공")
+        except:
+            continue
+
+    print(">>> [성공] 모든 연장 프로세스가 완료되었습니다.")
 
 except Exception as e:
-    print(f"스크립트 실행 중 오류가 발생했습니다: {e}")
+    print(f"\n[실패] 오류 발생: {e}")
+    driver.save_screenshot("error_screenshot.png")
+    exit(1)
 
 finally:
-    # 5. 드라이버 종료
     driver.quit()
-    print(">>> 스크립트를 종료합니다.")
+    print(">>> 스크립트 종료")
