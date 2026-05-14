@@ -83,13 +83,36 @@
                 <div class="control-group" style="flex: 1.5;">
                     <label for="ingredient">원료</label>
                     <input type="text" id="ingredient-input" value="닭고기">
-                </div>
+                </div>               
                 <div class="control-group" style="flex: 1;">
                     <label for="history-input">이력번호</label>
                     <input type="text" id="history-input" placeholder="이력번호 입력">
                 </div>
             </div>
 
+             <div id="marination-panel" style="display: none; background-color: #e3f2fd; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #90caf9;">
+                <div style="font-weight: bold; color: #1565c0; margin-bottom: 8px;">💧 염지 상세 설정</div>
+                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                    <div class="control-group" style="flex: 1; margin-bottom: 0;">
+                        <label>닭 호수</label>
+                        <input type="text" id="mari-size" placeholder="예: 9, 11, 15" class="form-control">
+                    </div>
+                    <div class="control-group" style="flex: 1; margin-bottom: 0;">
+                        <label>염지 농도(%)</label>
+                        <select id="mari-salt" class="form-control">
+                            <option value="2.0">2.0%</option>
+                            <option value="2.5">2.5%</option>
+                            <option value="3.0" selected>3.0%</option>
+                        </select>
+                    </div>
+                    <div class="control-group" style="flex: 1.5; margin-bottom: 0;">
+                        <label>닭고기 투입비율(%)</label>
+                        <input type="number" id="mari-chicken" value="68.6" step="0.1" class="form-control">
+                    </div>
+                </div>
+                <div style="font-size: 0.8em; color: #555; margin-top: 8px;">* 정제수와 식염 비율은 입력한 농도에 맞춰 자동 계산됩니다.</div>
+            </div>
+            
             <div class="control-group">
                 <label>보관방법</label>
                 <div class="radio-group">
@@ -263,7 +286,15 @@
             document.querySelectorAll('.product-button.active').forEach(b => b.classList.remove('active'));
             button.classList.add('active');
             selectedProduct = button.dataset.productName;
-            document.getElementById('custom-product-name').value = '';
+            document.getElementById('custom-product-name').value = ''; // (이전에 dgetElementById 오타도 수정해두었습니다)
+
+            // [추가] 닭염지(원료용) 버튼을 눌렀을 때만 패널 보이기
+            const mariPanel = document.getElementById('marination-panel');
+            if (selectedProduct === '닭염지(원료용)') {
+                mariPanel.style.display = 'block';
+            } else {
+                mariPanel.style.display = 'none';
+            }
 
             const productInfo = configData.products[selectedProduct];
             if (productInfo) {
@@ -284,7 +315,15 @@
             document.querySelectorAll('.product-button.active').forEach(b => b.classList.remove('active'));
             selectedProduct = customName;
 
-                // 히스토리 저장 데이터 구성
+            // [추가] 직접 입력으로 쳤을 때도 패널 보이기
+            const mariPanel = document.getElementById('marination-panel');
+            if (selectedProduct === '닭염지(원료용)') {
+                mariPanel.style.display = 'block';
+            } else {
+                mariPanel.style.display = 'none';
+            }
+
+            // 히스토리 저장 데이터 구성
             const historyItem = {
                 name: customName,
                 origin: document.querySelector('input[name="origin"]:checked').value,
@@ -299,17 +338,39 @@
 
         function handleAddToQueue() {
             if (!selectedProduct) { alert('먼저 제품을 선택해주세요.'); return; }
+            
+            // 1. 기본 이름과 상세내용 텍스트 생성
+            let printName = selectedProduct;
+            let detailsText = generateDetailsTextJS(
+                selectedProduct,
+                document.querySelector('input[name="storage"]:checked').value,
+                document.getElementById('ingredient-input').value
+            );
+
+            // 2. 염지닭일 경우 이름 변경 및 소금/물 비율 자동 계산 (미리보기와 동일한 로직)
+            if (selectedProduct === '닭염지(원료용)' ){
+                const size = document.getElementById('mari-size').value;
+                if (size) printName = `닭염지(원료용)(${size}호)`;
+
+                const chickenRatio = parseFloat(document.getElementById('mari-chicken').value) || 68.6;
+                const saltConcentration = parseFloat(document.getElementById('mari-salt').value) || 3.0; 
+                
+                const brineRatio = 100 - chickenRatio; 
+                const saltRatio = brineRatio * (saltConcentration / 100); 
+                const waterRatio = brineRatio - saltRatio; 
+
+                const mariString = `*원료 및 함량: 닭고기(국산)${chickenRatio.toFixed(1)}%,\n 정제수${waterRatio.toFixed(2)}%, 식염(국산)${saltRatio.toFixed(2)}%`;
+                detailsText = detailsText.replace('[염지자동계산]', mariString);
+            }
+
+            // 3. 계산 완료된 데이터를 큐에 추가
             const currentData = {
-                name: selectedProduct,
+                name: printName, // 계산된 이름 적용
                 origin: document.querySelector('input[name="origin"]:checked').value,
                 date: document.getElementById('date-display').textContent,
                 weight: document.getElementById('weight').value,
-                history: document.getElementById('history-input').value, // [추가]
-                details: generateDetailsTextJS(
-                    selectedProduct,
-                    document.querySelector('input[name="storage"]:checked').value,
-                    document.getElementById('ingredient-input').value
-                )
+                history: document.getElementById('history-input').value,
+                details: detailsText // 계산된 텍스트 적용
             };
             printQueue.push(currentData);
             updateQueueList();
@@ -465,17 +526,35 @@
                 previewArea.innerHTML = '<p>미리보기 생성 중...</p>';
                 
                 const selectedPaper = document.querySelector('input[name="paper_size"]:checked').value;
+                let printName = productName;
+                let detailsText = generateDetailsTextJS(productName, document.querySelector('input[name="storage"]:checked').value, document.getElementById('ingredient-input').value);
+
+                if (productName === '닭염지(원료용)') {
+                    // 1. 호수에 맞춰 출력할 이름 변경 (예: 염지닭 -> 염지닭(11호))
+                    const size = document.getElementById('mari-size').value;
+                    if (size) printName = `염지닭(${size}호)`;
+
+                    // 2. 소금과 물 비율 자동 계산
+                    const chickenRatio = parseFloat(document.getElementById('mari-chicken').value) || 68.6;
+                    const saltConcentration = parseFloat(document.getElementById('mari-salt').value) || 3.0; // 3%
+                    
+                    const brineRatio = 100 - chickenRatio; // 전체 염지액 비율 (예: 31.4%)
+                    const saltRatio = brineRatio * (saltConcentration / 100); // 염지액 중 소금 비율
+                    const waterRatio = brineRatio - saltRatio; // 나머지 물 비율
+
+                    // 3. 계산된 문자열 생성
+                    const mariString = `*원료 및 함량: 닭고기(국산)${chickenRatio.toFixed(1)}%,\n 정제수${waterRatio.toFixed(2)}%, 식염(국산)${saltRatio.toFixed(2)}%`;
+
+                    // 4. json에 설정해둔 [염지자동계산] 키워드를 계산된 문자열로 교체
+                    detailsText = detailsText.replace('[염지자동계산]', mariString);
+                }
                 const labelData = {
-                    name: productName,
+                    name: printName,
                     origin: document.querySelector('input[name="origin"]:checked').value,
                     date: document.getElementById('date-display').textContent,
                     weight: document.getElementById('weight').value,
                     history: document.getElementById('history-input').value, // [추가]
-                    details: generateDetailsTextJS(
-                        productName, 
-                        document.querySelector('input[name="storage"]:checked').value,
-                        document.getElementById('ingredient-input').value
-                    )
+                    details: detailsText
                 };
 
                 const response = await fetch('/generate_preview', {
@@ -493,8 +572,11 @@
                 }
             }, 200);
         }
-        
-        initialize();
+
+        // 패널 안의 값들이 바뀔 때도 미리보기 갱신
+        document.getElementById('mari-size').addEventListener('input', debouncedUpdatePreview);
+        document.getElementById('mari-salt').addEventListener('change', debouncedUpdatePreview);
+        document.getElementById('mari-chicken').addEventListener('input', debouncedUpdatePreview);
+
+        //initialize();
     </script>
-</body>
-</html>

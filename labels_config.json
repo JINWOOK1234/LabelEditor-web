@@ -31,10 +31,10 @@
     "근위": { "origin": "국내산", "ingredient": "닭고기", "template_type": "standard_poultry" },
     "가슴살(깍뚝)": { "origin": "국내산", "ingredient": "닭고기", "template_type": "standard_poultry" },
     "통날개": { "origin": "국내산", "ingredient": "닭고기", "template_type": "standard_poultry" },    
-    "9호 염지": {
+    "닭염지(원료용)": {
       "origin": "국내산",
       "use_template": "refrigerated_base",
-      "replace_lines": { "*원료 및 함량: 닭고기 100%": "*원료 및 함량: 닭고기(국산)68.6%,\n 정제수30.49%, 식염(국산)0.91%" }
+      "replace_lines": { "*원료 및 함량: 닭고기 100%": "[염지자동계산]" }
     },
     "민찌": {
       "origin": "브라질",
