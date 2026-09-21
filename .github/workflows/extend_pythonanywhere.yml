@@ -36,3 +36,6 @@ jobs:
       with:
         name: error-screenshot
         path: error_screenshot.png
+    
+    - name: Keepalive Workflow
+      uses: gautamkrishnar/keepalive-workflow@v1 # 60일 비활성화 방지용
